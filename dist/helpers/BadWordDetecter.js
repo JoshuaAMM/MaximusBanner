@@ -13,7 +13,8 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const EmbedMessages_1 = __importDefault(require("./EmbedMessages"));
-const readFiles_1 = __importDefault(require("./readFiles"));
+const FilesFunctions_1 = __importDefault(require("./FilesFunctions"));
+const StrikesRegister_1 = __importDefault(require("./StrikesRegister"));
 class BadWordDetecter {
     constructor(_msg) {
         this._msg = _msg;
@@ -22,7 +23,7 @@ class BadWordDetecter {
     }
     getBaneableWords() {
         const path = "./src/database/banned_words.txt";
-        const data = (0, readFiles_1.default)(path);
+        const data = FilesFunctions_1.default.readFile(path);
         if (!data)
             return [];
         const banneableWords = data.split("\n");
@@ -30,7 +31,7 @@ class BadWordDetecter {
     }
     _deleteMessage() {
         return __awaiter(this, void 0, void 0, function* () {
-            const warnMessage = this._embedMessages.warnUserBadWord(this._msg.author.toString());
+            const warnMessage = this._embedMessages.warnUserBadWord(this._msg);
             yield this._msg.reply({ embeds: [warnMessage] });
             yield this._msg.delete();
         });
@@ -42,6 +43,7 @@ class BadWordDetecter {
         _msg = _msg.split(" ").join("");
         for (let i = 0; i < this._baneableWords.length; i++) {
             if (_msg.includes(this._baneableWords[i])) {
+                StrikesRegister_1.default.strikesRegister(this._msg);
                 console.log(`${this._baneableWords[i]} is banned`);
                 this._deleteMessage();
                 break;

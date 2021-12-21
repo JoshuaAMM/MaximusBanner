@@ -1,6 +1,7 @@
 import { Message } from "discord.js";
 import EmbedMessages from "./EmbedMessages";
-import readFile from "./readFiles";
+import File from "./FilesFunctions";
+import Strikes from './StrikesRegister';
 
 class BadWordDetecter {
   private _msg: Message<boolean>;
@@ -15,7 +16,7 @@ class BadWordDetecter {
 
   private getBaneableWords() {
     const path = "./src/database/banned_words.txt";
-    const data = readFile(path);
+    const data = File.readFile(path);
 
     if (!data) return [];
 
@@ -26,15 +27,13 @@ class BadWordDetecter {
 
   private async _deleteMessage() {
     const warnMessage = this._embedMessages.warnUserBadWord(
-      this._msg.author.toString()
+      this._msg
     );
     await this._msg.reply({ embeds: [warnMessage] });
     await this._msg.delete();
   }
 
   private validateMessage(message: string) {
-
-
     let _msg = message.split("\n").join(" ");
     _msg = _msg.split("\r").join(" ");
     _msg = _msg.split("\t").join(" ");
@@ -42,6 +41,7 @@ class BadWordDetecter {
 
     for(let i = 0; i < this._baneableWords.length; i++) {
       if(_msg.includes(this._baneableWords[i])) {
+        Strikes.strikesRegister( this._msg );
         console.log(`${this._baneableWords[i]} is banned`);
         this._deleteMessage();
         break;
